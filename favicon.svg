@@ -1,0 +1,942 @@
+"use client";
+
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowUp,
+  Bot,
+  CalendarDays,
+  Camera,
+  Check,
+  ChefHat,
+  Clock3,
+  Download,
+  Filter,
+  Heart,
+  Mail,
+  MapPin,
+  Menu,
+  Minus,
+  Music,
+  Phone,
+  Plus,
+  Search,
+  ShoppingBag,
+  Sparkles,
+  Star,
+  Utensils,
+  X,
+} from "lucide-react";
+import { FormEvent, useMemo, useState } from "react";
+
+type MenuItem = {
+  id: number;
+  name: string;
+  category: "Veg" | "Non Veg" | "Desserts" | "Drinks";
+  price: number;
+  rating: number;
+  image: string;
+  description: string;
+  tag: string;
+};
+
+type Lead = {
+  id: string;
+  type: "Reservation" | "Order" | "Contact" | "Newsletter";
+  name: string;
+  phone: string;
+  email: string;
+  status: "New" | "Confirmed" | "Preparing" | "Closed";
+  amount?: number;
+  note: string;
+};
+
+const heroImage =
+  "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=2200&q=85";
+
+const galleryImages = [
+  "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1551218808-94e220e084d2?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80",
+];
+
+const menuItems: MenuItem[] = [
+  {
+    id: 1,
+    name: "Truffle Saffron Risotto",
+    category: "Veg",
+    price: 1180,
+    rating: 4.9,
+    image:
+      "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=900&q=80",
+    description: "Aged arborio rice, Kashmiri saffron, parmesan cloud, shaved black truffle.",
+    tag: "Chef signature",
+  },
+  {
+    id: 2,
+    name: "Charcoal Murgh Supreme",
+    category: "Non Veg",
+    price: 1450,
+    rating: 4.8,
+    image:
+      "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=900&q=80",
+    description: "Smoked chicken breast, royal spice glaze, pickled onion ash, herb jus.",
+    tag: "Live fire",
+  },
+  {
+    id: 3,
+    name: "Gold Leaf Tiramisu",
+    category: "Desserts",
+    price: 690,
+    rating: 4.9,
+    image:
+      "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=900&q=80",
+    description: "Mascarpone silk, espresso soil, Valrhona cocoa, edible gold.",
+    tag: "Limited",
+  },
+  {
+    id: 4,
+    name: "Rosemary Citrus Elixir",
+    category: "Drinks",
+    price: 390,
+    rating: 4.7,
+    image:
+      "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=900&q=80",
+    description: "Cold pressed citrus, rosemary smoke, honey pearls, mineral soda.",
+    tag: "Zero proof",
+  },
+  {
+    id: 5,
+    name: "Tandoor Burrata Naan",
+    category: "Veg",
+    price: 840,
+    rating: 4.8,
+    image:
+      "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=900&q=80",
+    description: "Hand-pulled burrata, charred naan, basil chutney, tomato confit.",
+    tag: "Best seller",
+  },
+  {
+    id: 6,
+    name: "Butter Poached Prawns",
+    category: "Non Veg",
+    price: 1720,
+    rating: 4.9,
+    image:
+      "https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=900&q=80",
+    description: "Coastal prawns, smoked makhani emulsion, curry leaf oil, lemon lace.",
+    tag: "Coastal",
+  },
+];
+
+const offers = [
+  ["Royal Weekend", "Four-course tasting menu with a complimentary rose elixir.", "Save 18%"],
+  ["Festival Gold", "Chef's celebration thali, dessert platter, and priority seating.", "2+2"],
+  ["Midnight Luxe", "Late night combo for premium takeaways after 10 PM.", "Rs 999"],
+];
+
+const reviews = [
+  ["Ananya R.", "The service felt like a five-star hotel and the food had real theatre."],
+  ["Kabir M.", "Exactly the kind of place I would book for a proposal dinner."],
+  ["Meera S.", "Beautiful ambience, fast ordering, and the dessert menu is dangerous."],
+];
+
+const initialLeads: Lead[] = [
+  {
+    id: "LD-1842",
+    type: "Reservation",
+    name: "Priya Sharma",
+    phone: "+91 98765 41002",
+    email: "priya@example.com",
+    status: "Confirmed",
+    note: "Anniversary dinner, 2 guests, window table.",
+  },
+  {
+    id: "LD-1841",
+    type: "Order",
+    name: "Rahul Mehta",
+    phone: "+91 98111 22445",
+    email: "rahul@example.com",
+    status: "Preparing",
+    amount: 2630,
+    note: "Risotto, prawns, tiramisu. Coupon AURELIA10.",
+  },
+  {
+    id: "LD-1840",
+    type: "Newsletter",
+    name: "Nisha",
+    phone: "-",
+    email: "nisha@example.com",
+    status: "New",
+    note: "Subscribed from footer.",
+  },
+];
+
+const categories = ["All", "Veg", "Non Veg", "Desserts", "Drinks"] as const;
+
+function formatMoney(value: number) {
+  return `Rs ${value.toLocaleString("en-IN")}`;
+}
+
+export default function Home() {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<(typeof categories)[number]>("All");
+  const [sort, setSort] = useState("Featured");
+  const [cart, setCart] = useState<Record<number, number>>({ 1: 1, 3: 1 });
+  const [favorite, setFavorite] = useState<number[]>([1, 6]);
+  const [coupon, setCoupon] = useState("");
+  const [reservationSent, setReservationSent] = useState(false);
+  const [orderSent, setOrderSent] = useState(false);
+  const [selectedGallery, setSelectedGallery] = useState<string | null>(null);
+  const [musicOn, setMusicOn] = useState(false);
+  const [leads, setLeads] = useState(initialLeads);
+  const { scrollYProgress } = useScroll();
+  const heroY = useTransform(scrollYProgress, [0, 0.25], [0, -90]);
+
+  const filteredMenu = useMemo(() => {
+    const filtered = menuItems
+      .filter((item) => category === "All" || item.category === category)
+      .filter((item) => item.name.toLowerCase().includes(query.toLowerCase()));
+
+    if (sort === "Price Low") return [...filtered].sort((a, b) => a.price - b.price);
+    if (sort === "Price High") return [...filtered].sort((a, b) => b.price - a.price);
+    if (sort === "Rating") return [...filtered].sort((a, b) => b.rating - a.rating);
+    return filtered;
+  }, [category, query, sort]);
+
+  const cartItems = menuItems
+    .filter((item) => cart[item.id])
+    .map((item) => ({ ...item, quantity: cart[item.id] }));
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discount = coupon.trim().toUpperCase() === "AURELIA10" ? Math.round(subtotal * 0.1) : 0;
+  const delivery = subtotal > 2500 ? 0 : 90;
+  const gst = Math.round((subtotal - discount) * 0.05);
+  const grandTotal = subtotal - discount + delivery + gst;
+
+  function addLead(lead: Omit<Lead, "id" | "status">, status: Lead["status"] = "New") {
+    const nextLead: Lead = {
+      ...lead,
+      id: `LD-${1843 + leads.length}`,
+      status,
+    };
+    setLeads((current) => [nextLead, ...current]);
+    const saved = JSON.parse(window.localStorage.getItem("aureliaLeads") || "[]") as Lead[];
+    window.localStorage.setItem("aureliaLeads", JSON.stringify([nextLead, ...saved]));
+
+    const endpoint = window.localStorage.getItem("aureliaSheetsEndpoint");
+    if (endpoint) {
+      fetch(endpoint, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nextLead),
+      }).catch(() => undefined);
+    }
+  }
+
+  function updateCart(id: number, delta: number) {
+    setCart((current) => {
+      const quantity = Math.max((current[id] || 0) + delta, 0);
+      const next = { ...current };
+      if (quantity === 0) delete next[id];
+      else next[id] = quantity;
+      return next;
+    });
+  }
+
+  function submitReservation(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    addLead(
+      {
+        type: "Reservation",
+        name: String(data.get("name") || "Guest"),
+        phone: String(data.get("phone") || ""),
+        email: String(data.get("email") || ""),
+        note: `${data.get("date")} at ${data.get("time")}, ${data.get("guests")} guests, ${data.get("occasion")}. ${data.get("request")}`,
+      },
+      "Confirmed",
+    );
+    setReservationSent(true);
+    event.currentTarget.reset();
+    window.setTimeout(() => setReservationSent(false), 2800);
+  }
+
+  function submitContact(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    addLead({
+      type: "Contact",
+      name: String(data.get("contactName") || "Website enquiry"),
+      phone: String(data.get("contactPhone") || ""),
+      email: String(data.get("contactEmail") || ""),
+      note: String(data.get("message") || ""),
+    });
+    event.currentTarget.reset();
+  }
+
+  function submitNewsletter(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    addLead({
+      type: "Newsletter",
+      name: "Subscriber",
+      phone: "-",
+      email: String(data.get("newsletter") || ""),
+      note: "Subscribed from footer.",
+    });
+    event.currentTarget.reset();
+  }
+
+  function submitOrder() {
+    if (!cartItems.length) return;
+    addLead(
+      {
+        type: "Order",
+        name: "WhatsApp Customer",
+        phone: "+91 90000 00000",
+        email: "order@whatsapp.local",
+        amount: grandTotal,
+        note: cartItems.map((item) => `${item.quantity} x ${item.name}`).join(", "),
+      },
+      "Preparing",
+    );
+    setOrderSent(true);
+    window.setTimeout(() => setOrderSent(false), 2800);
+    const message = encodeURIComponent(
+      `Hello Aurelia Table, I would like to order: ${cartItems
+        .map((item) => `${item.quantity} x ${item.name}`)
+        .join(", ")}. Total ${formatMoney(grandTotal)}.`,
+    );
+    window.open(`https://wa.me/919000000000?text=${message}`, "_blank", "noopener,noreferrer");
+  }
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#060504] text-[#fffaf0]">
+      <motion.div className="scroll-progress" style={{ scaleX: scrollYProgress }} />
+
+      <nav className="nav-glass">
+        <a href="#home" className="brand-mark" aria-label="Aurelia Table home">
+          <span>AT</span>
+          Aurelia Table
+        </a>
+        <div className="nav-links">
+          {["Menu", "Order", "Reserve", "Gallery", "Reviews", "Contact"].map((item) => (
+            <a key={item} href={`#${item.toLowerCase()}`}>
+              {item}
+            </a>
+          ))}
+        </div>
+        <a href="#reserve" className="nav-cta">
+          <CalendarDays size={17} />
+          Reserve
+        </a>
+      </nav>
+
+      <section id="home" className="hero-section">
+        <motion.div className="hero-bg" style={{ y: heroY }}>
+          <img src={heroImage} alt="Luxury fine dining table at Aurelia Table" />
+        </motion.div>
+        <div className="hero-overlay" />
+        <motion.div
+          className="hero-content"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9 }}
+        >
+          <div className="eyebrow">
+            <Sparkles size={16} />
+            Luxury fine dining and cinematic Indian modern cuisine
+          </div>
+          <h1>Aurelia Table</h1>
+          <p>
+            A black-and-gold dining destination where live-fire cooking, flawless service,
+            and online ordering meet in one premium restaurant experience.
+          </p>
+          <div className="hero-actions">
+            <a className="gold-button" href="#reserve">
+              Reserve Table
+            </a>
+            <a className="ghost-button" href="#order">
+              Order Online
+            </a>
+            <a className="ghost-button icon-only" href="#menu" aria-label="Watch menu">
+              <Menu size={18} />
+              Watch Menu
+            </a>
+          </div>
+          <div className="hero-stats" aria-label="Restaurant highlights">
+            {[
+              ["4.9", "Google rating"],
+              ["48K+", "Happy customers"],
+              ["14", "Years experience"],
+            ].map(([value, label]) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+              >
+                <strong>{value}</strong>
+                <span>{label}</span>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+        <motion.div
+          className="floating-dish dish-one"
+          animate={{ y: [0, -18, 0], rotate: [0, 2, 0] }}
+          transition={{ duration: 6, repeat: Infinity }}
+        >
+          <img src={menuItems[0].image} alt="Truffle saffron risotto" />
+          <span>Signature risotto</span>
+        </motion.div>
+        <motion.div
+          className="floating-dish dish-two"
+          animate={{ y: [0, 14, 0], rotate: [0, -2, 0] }}
+          transition={{ duration: 7, repeat: Infinity }}
+        >
+          <img src={menuItems[2].image} alt="Gold leaf tiramisu" />
+          <span>Gold dessert</span>
+        </motion.div>
+      </section>
+
+      <section className="section-shell" id="signature">
+        <SectionTitle kicker="Signature dishes" title="Dishes made to close the sale." />
+        <div className="signature-grid">
+          {menuItems.slice(0, 3).map((item) => (
+            <FoodCard
+              key={item.id}
+              item={item}
+              onAdd={() => updateCart(item.id, 1)}
+              favorite={favorite.includes(item.id)}
+              onFavorite={() =>
+                setFavorite((current) =>
+                  current.includes(item.id)
+                    ? current.filter((id) => id !== item.id)
+                    : [...current, item.id],
+                )
+              }
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="section-shell split-section" id="menu">
+        <div>
+          <SectionTitle kicker="Interactive menu" title="Search, filter, sort, and order instantly." />
+          <div className="toolbar">
+            <label className="search-box">
+              <Search size={18} />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search dishes"
+              />
+            </label>
+            <div className="segmented" aria-label="Category filter">
+              {categories.map((item) => (
+                <button
+                  key={item}
+                  className={category === item ? "active" : ""}
+                  onClick={() => setCategory(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <label className="select-box">
+              <Filter size={17} />
+              <select value={sort} onChange={(event) => setSort(event.target.value)}>
+                <option>Featured</option>
+                <option>Rating</option>
+                <option>Price Low</option>
+                <option>Price High</option>
+              </select>
+            </label>
+          </div>
+          <div className="menu-list">
+            {filteredMenu.map((item) => (
+              <motion.article
+                key={item.id}
+                className="menu-row"
+                layout
+                whileHover={{ x: 6 }}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+              >
+                <img src={item.image} alt={item.name} />
+                <div>
+                  <span>{item.category}</span>
+                  <h3>{item.name}</h3>
+                  <p>{item.description}</p>
+                </div>
+                <strong>{formatMoney(item.price)}</strong>
+                <button onClick={() => updateCart(item.id, 1)} aria-label={`Add ${item.name}`}>
+                  <Plus size={18} />
+                </button>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+
+        <aside className="order-card" id="order">
+          <div className="order-head">
+            <div>
+              <span>Online ordering</span>
+              <h2>Your cart</h2>
+            </div>
+            <ShoppingBag />
+          </div>
+          <div className="cart-lines">
+            {cartItems.map((item) => (
+              <div className="cart-line" key={item.id}>
+                <img src={item.image} alt="" />
+                <div>
+                  <strong>{item.name}</strong>
+                  <span>{formatMoney(item.price)}</span>
+                </div>
+                <div className="qty">
+                  <button onClick={() => updateCart(item.id, -1)} aria-label={`Decrease ${item.name}`}>
+                    <Minus size={14} />
+                  </button>
+                  {item.quantity}
+                  <button onClick={() => updateCart(item.id, 1)} aria-label={`Increase ${item.name}`}>
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <label className="coupon">
+            Coupon code
+            <input
+              value={coupon}
+              onChange={(event) => setCoupon(event.target.value)}
+              placeholder="Try AURELIA10"
+            />
+          </label>
+          <div className="totals">
+            <span>
+              Subtotal <strong>{formatMoney(subtotal)}</strong>
+            </span>
+            <span>
+              Discount <strong>-{formatMoney(discount)}</strong>
+            </span>
+            <span>
+              Delivery <strong>{delivery ? formatMoney(delivery) : "Free"}</strong>
+            </span>
+            <span>
+              GST 5% <strong>{formatMoney(gst)}</strong>
+            </span>
+            <span className="grand">
+              Grand total <strong>{formatMoney(grandTotal)}</strong>
+            </span>
+          </div>
+          <div className="checkout-box">
+            <input placeholder="Full name" aria-label="Full name" />
+            <input placeholder="Delivery address" aria-label="Delivery address" />
+            <input placeholder="Phone number" aria-label="Phone number" />
+          </div>
+          <button className="gold-button full" onClick={submitOrder}>
+            WhatsApp Order
+          </button>
+          <AnimatePresence>
+            {orderSent && (
+              <motion.div
+                className="success-pill"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <Check size={16} />
+                Order captured in dashboard
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </aside>
+      </section>
+
+      <section className="section-shell reservation-section" id="reserve">
+        <div>
+          <SectionTitle kicker="Table reservation" title="A high-converting booking flow." />
+          <p className="section-copy">
+            Enquiries are saved to the local CRM dashboard immediately and can be forwarded
+            to Google Sheets by adding an Apps Script endpoint.
+          </p>
+          <div className="feature-list">
+            {["Google Sheet ready", "Instant confirmation", "Occasion tagging"].map((item) => (
+              <span key={item}>
+                <Check size={16} />
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+        <form className="glass-form" onSubmit={submitReservation}>
+          <input name="name" placeholder="Full name" required />
+          <input name="phone" placeholder="Phone" required />
+          <input name="email" type="email" placeholder="Email" required />
+          <div className="two-col">
+            <input name="date" type="date" required />
+            <input name="time" type="time" required />
+          </div>
+          <div className="two-col">
+            <input name="guests" type="number" min="1" defaultValue="2" />
+            <select name="occasion" defaultValue="Anniversary">
+              <option>Anniversary</option>
+              <option>Birthday</option>
+              <option>Business Dinner</option>
+              <option>Private Event</option>
+            </select>
+          </div>
+          <textarea name="request" placeholder="Special request" />
+          <button className="gold-button full">Confirm Reservation</button>
+          <AnimatePresence>
+            {reservationSent && (
+              <motion.div
+                className="confirmation"
+                initial={{ scale: 0.86, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <Check />
+                Reservation confirmed
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </form>
+      </section>
+
+      <section className="section-shell gallery-section" id="gallery">
+        <SectionTitle kicker="Gallery" title="Ambience, kitchen, events, and plating." />
+        <div className="masonry">
+          {galleryImages.map((image, index) => (
+            <button
+              key={image}
+              className={index % 3 === 0 ? "tall" : ""}
+              onClick={() => setSelectedGallery(image)}
+              aria-label="Open gallery image"
+            >
+              <img src={image} alt="Aurelia Table gallery" loading="lazy" />
+              <span>{index % 2 === 0 ? "Before service" : "After plating"}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-shell chef-section">
+        <div className="chef-photo">
+          <img
+            src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=1000&q=80"
+            alt="Executive chef Armaan Rai"
+          />
+        </div>
+        <div>
+          <SectionTitle kicker="Chef Armaan Rai" title="A decade of Michelin-trained restraint." />
+          <p className="section-copy">
+            Armaan brings live-fire Indian technique, French discipline, and a relentless
+            obsession with texture. His kitchen has earned 17 culinary awards and a loyal
+            private dining following.
+          </p>
+          <div className="chef-awards">
+            {["17 awards", "14 years", "Farm-first"].map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section-shell">
+        <SectionTitle kicker="Why choose us" title="Premium details that convert first-time visitors." />
+        <div className="why-grid">
+          {([
+            ["Fresh Food", Utensils],
+            ["Fast Delivery", Clock3],
+            ["Premium Ambience", Sparkles],
+            ["Professional Chef", ChefHat],
+            ["Live Kitchen", Star],
+            ["Online Reservation", CalendarDays],
+          ] as [string, LucideIcon][]).map(([label, Icon]) => (
+            <motion.div key={String(label)} className="why-card" whileHover={{ y: -8 }}>
+              <Icon size={24} />
+              <span>{String(label)}</span>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-shell offer-review-grid" id="reviews">
+        <div>
+          <SectionTitle kicker="Special offers" title="High-intent promotions." />
+          <div className="offers">
+            {offers.map(([title, copy, badge]) => (
+              <motion.article key={title} className="offer-card" whileHover={{ scale: 1.02 }}>
+                <span>{badge}</span>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+        <div>
+          <SectionTitle kicker="Google reviews" title="Guests sell the table for you." />
+          <div className="review-slider">
+            {reviews.map(([name, copy]) => (
+              <article key={name}>
+                <div className="stars">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} size={15} fill="currentColor" />
+                  ))}
+                </div>
+                <p>{copy}</p>
+                <strong>{name}</strong>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section-shell about-section" id="about">
+        <SectionTitle kicker="About Aurelia" title="A restaurant built around trust." />
+        <div className="about-grid">
+          {[
+            ["Story", "Born from private chef dinners and built into a destination dining room."],
+            ["Mission", "Make every reservation feel personal, warm, and worth dressing for."],
+            ["Fresh ingredients", "Daily produce, traceable seafood, and small-batch spice blends."],
+            ["Hygiene", "Open kitchen protocols, visible prep discipline, and clean delivery systems."],
+            ["Quality", "Measured service standards from booking to the final bite."],
+          ].map(([title, copy]) => (
+            <article key={title}>
+              <h3>{title}</h3>
+              <p>{copy}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-shell instagram-section">
+        <SectionTitle kicker="Instagram feed" title="@aureliatable, styled for the scroll." />
+        <div className="insta-grid">
+          {galleryImages.concat(menuItems.slice(0, 2).map((item) => item.image)).map((image, index) => (
+            <div key={`${image}-${index}`}>
+              <img src={image} alt="Instagram style restaurant post" loading="lazy" />
+              <Camera size={18} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-shell dashboard-section" id="dashboard">
+        <div className="dashboard-head">
+          <SectionTitle kicker="CRM dashboards" title="Lead, reservation, order, and customer views." />
+          <button
+            className="ghost-button"
+            onClick={() => {
+              const csv = [
+                "id,type,name,phone,email,status,amount,note",
+                ...leads.map((lead) =>
+                  [
+                    lead.id,
+                    lead.type,
+                    lead.name,
+                    lead.phone,
+                    lead.email,
+                    lead.status,
+                    lead.amount || "",
+                    `"${lead.note.replace(/"/g, '""')}"`,
+                  ].join(","),
+                ),
+              ].join("\n");
+              const blob = new Blob([csv], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = "aurelia-leads.csv";
+              link.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            <Download size={17} />
+            Export CSV
+          </button>
+        </div>
+        <div className="dash-stats">
+          {[
+            ["Leads", leads.length],
+            ["Reservations", leads.filter((lead) => lead.type === "Reservation").length],
+            ["Orders", leads.filter((lead) => lead.type === "Order").length],
+            ["Customers", new Set(leads.map((lead) => lead.email)).size],
+          ].map(([label, value]) => (
+            <article key={String(label)}>
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </article>
+          ))}
+        </div>
+        <div className="lead-table">
+          {leads.map((lead) => (
+            <article key={lead.id}>
+              <span>{lead.id}</span>
+              <strong>{lead.name}</strong>
+              <em>{lead.type}</em>
+              <p>{lead.note}</p>
+              <button>{lead.status}</button>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-shell contact-section" id="contact">
+        <div>
+          <SectionTitle kicker="Contact" title="Turn every visit into a booked table." />
+          <div className="contact-list">
+            <span>
+              <Phone size={18} /> +91 90000 00000
+            </span>
+            <span>
+              <Mail size={18} /> reservations@aureliatable.com
+            </span>
+            <span>
+              <MapPin size={18} /> Bandra West, Mumbai
+            </span>
+            <span>
+              <Clock3 size={18} /> 12 PM to 1 AM, all days
+            </span>
+          </div>
+          <div className="map-embed" role="img" aria-label="Map preview for Aurelia Table">
+            <MapPin />
+            <span>Google Maps ready</span>
+          </div>
+        </div>
+        <form className="glass-form" onSubmit={submitContact}>
+          <input name="contactName" placeholder="Name" required />
+          <input name="contactPhone" placeholder="Phone" required />
+          <input name="contactEmail" type="email" placeholder="Email" required />
+          <textarea name="message" placeholder="How can we help?" />
+          <button className="gold-button full">Send Enquiry</button>
+        </form>
+      </section>
+
+      <footer className="footer">
+        <div>
+          <a className="brand-mark" href="#home">
+            <span>AT</span>
+            Aurelia Table
+          </a>
+          <p>Luxury dining, online ordering, reservation capture, and CRM readiness.</p>
+        </div>
+        <form onSubmit={submitNewsletter} className="newsletter">
+          <input name="newsletter" type="email" placeholder="Email for private offers" required />
+          <button>Join</button>
+        </form>
+        <div className="footer-links">
+          <a href="#menu">Menu</a>
+          <a href="#reserve">Reserve</a>
+          <a href="#dashboard">Admin</a>
+          <a href="#contact">Privacy Policy</a>
+          <a href="#contact">Terms</a>
+        </div>
+      </footer>
+
+      <div className="floating-actions">
+        <a href="tel:+919000000000" aria-label="Call Aurelia Table">
+          <Phone size={19} />
+        </a>
+        <a href="#reserve" aria-label="Reserve table">
+          <CalendarDays size={19} />
+        </a>
+        <button onClick={() => setMusicOn((value) => !value)} aria-label="Toggle dining room music">
+          <Music size={19} />
+          <span className={musicOn ? "pulse-dot on" : "pulse-dot"} />
+        </button>
+        <a href="#home" aria-label="Back to top">
+          <ArrowUp size={19} />
+        </a>
+      </div>
+      <a className="whatsapp-float" href="https://wa.me/919000000000" target="_blank" rel="noreferrer">
+        WhatsApp
+      </a>
+      <button className="ai-chat" aria-label="AI chat placeholder">
+        <Bot size={20} />
+        AI Concierge
+      </button>
+
+      <AnimatePresence>
+        {selectedGallery && (
+          <motion.div
+            className="lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedGallery(null)}
+          >
+            <button aria-label="Close lightbox">
+              <X />
+            </button>
+            <img src={selectedGallery} alt="Expanded restaurant gallery" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </main>
+  );
+}
+
+function SectionTitle({ kicker, title }: { kicker: string; title: string }) {
+  return (
+    <motion.div
+      className="section-title"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.65 }}
+    >
+      <span>{kicker}</span>
+      <h2>{title}</h2>
+    </motion.div>
+  );
+}
+
+function FoodCard({
+  item,
+  onAdd,
+  favorite,
+  onFavorite,
+}: {
+  item: MenuItem;
+  onAdd: () => void;
+  favorite: boolean;
+  onFavorite: () => void;
+}) {
+  return (
+    <motion.article className="food-card" whileHover={{ y: -10 }} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+      <div className="food-image">
+        <img src={item.image} alt={item.name} loading="lazy" />
+        <span>{item.tag}</span>
+      </div>
+      <div className="food-body">
+        <div>
+          <h3>{item.name}</h3>
+          <strong>{formatMoney(item.price)}</strong>
+        </div>
+        <p>{item.description}</p>
+        <div className="card-actions">
+          <button onClick={onAdd}>
+            <ShoppingBag size={16} />
+            Add to Cart
+          </button>
+          <button aria-label={`Quick view ${item.name}`}>
+            <Search size={16} />
+          </button>
+          <button onClick={onFavorite} aria-label={`Favorite ${item.name}`} className={favorite ? "liked" : ""}>
+            <Heart size={16} fill={favorite ? "currentColor" : "none"} />
+          </button>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
